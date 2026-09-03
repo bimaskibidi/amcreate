@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>AM Premium</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f6f7f9;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.06);
+    }
+
+    .logo {
+      width: 55px;
+      height: 55px;
+      border-radius: 15px;
+      background: #111827;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 15px;
+      font-weight: bold;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .desc {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 7px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #d1d5db;
+      border-radius: 11px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 11px;
+      padding: 13px;
+      margin-top: 12px;
+      background: #111827;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .success {
+      color: #16a34a;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    .result {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .result p {
+      font-size: 13px;
+      margin: 8px 0;
+    }
+
+    .result b {
+      color: #111827;
+    }
+
+    .secondary {
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    footer {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 11px;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+
+    <div class="logo">AM</div>
+
+    <h1>AM Premium</h1>
+
+    <p class="desc">
+      Masukkan email untuk memulai proses verifikasi.
+    </p>
+
+    <form id="form">
+
+      <label for="email">Email</label>
+
+      <input
+        id="email"
+        type="email"
+        placeholder="nama@email.com"
+        autocomplete="email"
+        required
+      >
+
+      <button id="submitBtn" type="submit">
+        Kirim Magic Link
+      </button>
+
+    </form>
+
+    <div id="status" class="status"></div>
+
+    <div id="result" class="result">
+
+      <p>
+        📧 Email:
+        <b id="resultEmail">-</b>
+      </p>
+
+      <p>
+        📬 Status:
+        <b>Magic Link dikirim</b>
+      </p>
+
+      <button
+        class="secondary"
+        onclick="resetForm()"
+      >
+        Gunakan Email Lain
+      </button>
+
+    </div>
+
+    <footer>
+      AM Premium • Verification
+    </footer>
+
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const emailInput = document.getElementById("email");
+    const submitBtn = document.getElementById("submitBtn");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+    const resultEmail = document.getElementById("resultEmail");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = emailInput.value.trim();
+
+      if (!email) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Memproses...";
+
+      status.textContent = "";
+      status.className = "status";
+
+      result.style.display = "none";
+
+      try {
+        const response = await fetch("/api/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(
+            data.error || "Gagal mengirim Magic Link"
+          );
+        }
+
+        resultEmail.textContent = email;
+        result.style.display = "block";
+
+        status.textContent =
+          "✓ Magic Link berhasil dikirim.";
+
+        status.className =
+          "status success";
+
+      } catch (error) {
+
+        status.textContent =
+          "✕ " + error.message;
+
+        status.className =
+          "status error";
+
+      } finally {
+
+        submitBtn.disabled = false;
+        submitBtn.textContent =
+          "Kirim Magic Link";
+
+      }
+    });
+
+    function resetForm() {
+      form.reset();
+      result.style.display = "none";
+      status.textContent = "";
+      status.className = "status";
+      emailInput.focus();
+    }
+  </script>
+
+</body>
+</html>
